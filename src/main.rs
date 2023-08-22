@@ -16,6 +16,10 @@ fn main() {
         query = read!("{}\n");
     }
 
+    if query.is_empty() {
+        return;
+    }
+
     let mut page = 1;
 
     //url encode the query
@@ -168,6 +172,10 @@ fn main() {
 
         match temp {
             Ok(num) => {
+
+                if (num.overflowing_sub(1).0) >= parsed.len() {
+                    continue;
+                }
                 println!(
                     "\nName: {}\n\nTorrent Link: {}\n\nMagnet Link: {}",
                     parsed[num - 1].name,
