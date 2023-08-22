@@ -6,6 +6,7 @@ A terminal bitsearch.to frontend.
 ### Arch Linux
 Just install the AUR package, here is an example with yay:
 `yay -S tbitsearch-git`
+
 Or with paru:
 `paru -S tgptsearch-git`
 
