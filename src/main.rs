@@ -10,6 +10,7 @@ use soup::prelude::*;
 use text_io::read;
 
 #[derive(Parser)]
+#[clap(version)]
 struct Cli {
     /// The query to search for
     //#[arg(short, long)]
