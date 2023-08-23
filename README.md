@@ -27,3 +27,18 @@ cd tbitsearch
 cargo bulid --release
 ```
 The binary will be created in the `tbitsearch/target/release` folder
+
+# Command line options
+Just run `tbitsearch --help`, but if you don't want to here is the output:
+```
+Usage: tbitsearch [OPTIONS] <QUERY>
+
+Arguments:
+  <QUERY>  The query to search for
+
+Options:
+  -s, --sort <SORT>          Sort by (relevance, seeders, leechers, data, size) [default: relevance]
+  -o, --order <ORDER>        The sort order (asc, desc) [default: desc]
+  -c, --category <CATEGORY>  The category to search in (all, videos, software, music, games) [default: all]
+  -h, --help                 Print help
+```
