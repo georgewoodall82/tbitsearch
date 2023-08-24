@@ -40,5 +40,8 @@ Options:
   -s, --sort <SORT>          Sort by (relevance, seeders, leechers, data, size) [default: relevance]
   -o, --order <ORDER>        The sort order (asc, desc) [default: desc]
   -c, --category <CATEGORY>  The category to search in (all, videos, software, music, games) [default: all]
+  -p, --pages <PAGES>        The number of pages to show at one time [default: 1]
+  -j, --json                 Output the results in JSON format
   -h, --help                 Print help
+  -V, --version              Print version
 ```
