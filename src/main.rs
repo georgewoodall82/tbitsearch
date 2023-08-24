@@ -1,13 +1,14 @@
 //tbitsearch - A torrent search engine that scrapes bitsearch for results.
 
 use std::rc::Rc;
-
 use clap::Parser;
 use colored::Colorize;
 use markup5ever::rcdom::Node;
 use reqwest::Url;
 use soup::prelude::*;
 use text_io::read;
+use serde::Serialize;
+use serde_json::to_string_pretty;
 
 #[derive(Parser)]
 #[clap(version)]
@@ -27,8 +28,17 @@ struct Cli {
     /// The category to search in (all, videos, software, music, games)
     #[arg(short, long, default_value = "all")]
     category: String,
+
+    /// The number of pages to show at one time
+    #[arg(short, long, default_value = "1")]
+    pages: i32,
+
+    /// Output the results in JSON format
+    #[arg(short, long)]
+    json: bool,
 }
 
+#[derive(Serialize)]
 struct Torrent {
     name: String,
     magnet: String,
@@ -120,6 +130,9 @@ fn main() {
         return;
     }
 
+    let mut mpagecountdown = args.pages;
+    let mut mpagebuffer: Vec<Torrent> = Vec::new();
+
     let mut page = 1;
 
     let category = match args.category.as_str() {
@@ -133,19 +146,19 @@ fn main() {
 
     //url encode the query
     let mut url = Url::parse("https://bitsearch.to/search").unwrap();
-    url.set_query(Some(
-        format!(
-            "q={}&sort={}&order={}&category={}&subcat={}",
-            args.query, args.sort, args.order, category.0, category.1
-        )
-        .as_str(),
-    ));
-    println!("{}", url.as_str());
 
     let mut numresults: i32 = 0;
     let mut numpages: i32 = 0;
 
     loop {
+        url.set_query(Some(
+            format!(
+                "q={}&page={}&sort={}&order={}&category={}&subcat={}",
+                args.query, page, args.sort, args.order, category.0, category.1
+            )
+            .as_str(),
+        ));
+
         let response = reqwest::blocking::get(url.clone()).expect("Failed to reach bitsearch.to");
         let souplol = Soup::from_reader(response).unwrap();
         let results = souplol
@@ -155,7 +168,6 @@ fn main() {
             .find_all();
 
         // If numresults has not already been set
-
         numresults = if page == 1 {
             souplol
                 .tag("span")
@@ -191,8 +203,26 @@ fn main() {
             }
         }
 
-        if parsed.len() == 0 {
+        if mpagecountdown > 1 && args.pages > 1 {
+            mpagebuffer.append(parsed.as_mut());
+            mpagecountdown -= 1;
+            page += 1;
+            continue;
+        } else if mpagecountdown == 1 && args.pages > 1 {
+            mpagebuffer.append(&mut parsed);
+            parsed.append(&mut mpagebuffer);
+        }
+
+        if parsed.len() == 0 && args.json {
+            println!("[]");
+            break;
+        } else if parsed.len() == 0 {
             println!("No results found.");
+            break;
+        }
+
+        if args.json {
+            println!("{}", to_string_pretty(&parsed).unwrap());
             break;
         }
 
@@ -215,33 +245,26 @@ fn main() {
         print!("Page {}/{}\nChoice (Press Enter for next):", page, numpages);
         let choice: String = read!("{}\n");
 
-        let temp = choice.parse::<usize>();
-
-        match temp {
+        match choice.parse::<usize>() {
             Ok(num) => {
                 if (num.overflowing_sub(1).0) >= parsed.len() {
                     continue;
                 }
                 println!(
                     "\nName: {}\n\nTorrent Link: {}\n\nMagnet Link: {}",
-                    parsed[num - 1].name,
-                    parsed[num - 1].torrent,
-                    parsed[num - 1].magnet
+                    parsed[num - 1].name.bold(),
+                    parsed[num - 1].torrent.underline(),
+                    parsed[num - 1].magnet.underline()
                 );
                 break;
             }
             Err(_) => {
+                mpagecountdown = args.pages;
+                mpagebuffer = Vec::new();
                 if page == numpages {
                     continue;
                 }
                 page += 1;
-                url.set_query(Some(
-                    format!(
-                        "q={}&page={}&sort={}&order={}&category={}&subcat={}",
-                        args.query, page, args.sort, args.order, category.0, category.1
-                    )
-                    .as_str(),
-                ));
                 continue;
             }
         }
