@@ -12,7 +12,7 @@ Or with paru:
 
 ### Other Distros
 You can download the latest binary from the [release section](https://github.com/georgewoodall82/tbitsearch/releases) and add it to a directory in PATH, here is an example that should work on most systems:
-`sudo cp ./tbitsearch /usr/bin/tbitsearch`
+`sudo cp [binary name] /usr/bin/tbitsearch`
 Or, [build it yourself.](#building-1)
 
 # Building
